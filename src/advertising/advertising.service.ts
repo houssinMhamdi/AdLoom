@@ -13,7 +13,7 @@ export class AdvertisingService {
     private readonly adsModel: Model<Advertising>,
   ) {}
 
-async create(item: CreateAdvertisingDto): Promise<Advertising> {
+  async create(item: CreateAdvertisingDto): Promise<Advertising> {
     if (!item.title || !item.description) {
       throw new Error('Required fields are missing');
     }
@@ -21,11 +21,11 @@ async create(item: CreateAdvertisingDto): Promise<Advertising> {
     return newItem.save();
   }
 
-async findAll(): Promise<Advertising[]> {
+  async findAll(): Promise<Advertising[]> {
     return this.adsModel.find().exec();
   }
 
-findOne(id: string) {
+  findOne(id: string) {
     return this.adsModel.findById(id);
   }
 
@@ -56,12 +56,19 @@ findOne(id: string) {
   }
 
   async remove(id: string) {
-    const existingItem = await this.adsModel.findById(id).exec();
-    if (!existingItem) {
-      throw new Error('image not found');
-    }
-    if (existingItem.filePath && existingItem.filePath) {
-      fs.unlinkSync(existingItem.filePath);
+    try {
+      const existingItem = await this.adsModel.findById(id).exec();
+      if (!existingItem) {
+        throw new Error('image not found');
+      }
+      console.log('eee', existingItem);
+      if (existingItem.filePath) {
+        fs.unlinkSync(existingItem.filePath);
+      } else {
+      }
+      return this.adsModel.findByIdAndDelete(id).exec();
+    } catch (error) {
+      console.log('eee', error);
     }
   }
 }
