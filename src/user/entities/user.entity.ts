@@ -36,7 +36,7 @@ export class User {
 
   @Prop()
   businessType?: string;
-
+ 
   @Prop()
   licenseNumber?: string;
 
