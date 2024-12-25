@@ -3,61 +3,69 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UploadedFile,
   UseInterceptors,
   Put,
+  UseGuards,
+  Request,
+  ForbiddenException,
 } from '@nestjs/common';
-import * as fs from 'fs';
+
 import { AdvertisingService } from './advertising.service';
 import { CreateAdvertisingDto } from './dto/create-advertising.dto';
 import { UpdateAdvertisingDto } from './dto/update-advertising.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { Advertising } from './entities/advertising.entity';
-import { deleteFile } from './utils/file.utils';
+import { deleteFile, editFileName, handelfileFilter } from './utils/file.utils';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { UerRole } from 'src/user/Enums/Roles';
+import { Roles } from 'src/auth/guard/roles.decorator';
+import { ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Advertising')
 @Controller('api/advertising')
 export class AdvertisingController {
   constructor(private readonly advertisingService: AdvertisingService) {}
 
+
+  @ApiOperation({ summary: 'Create a new advertisement' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Create Advertising Request',
+    type: CreateAdvertisingDto,
+  })
+  @Roles(UerRole.Admin, UerRole.Advertiser)
+  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @Post()
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
         destination: './uploads',
-        filename: (req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          callback(null, `${uniqueSuffix}-${file.originalname}`);
-        },
+        filename: editFileName,
       }),
-      fileFilter: (req, file, callback) => {
-        const allowedTypes = [
-          'image/jpeg',
-          'image/png',
-          'video/mp4',
-          'video/mkv',
-        ];
-        if (allowedTypes.includes(file.mimetype)) {
-          callback(null, true);
-        } else {
-          callback(new Error('Invalid file type'), false);
-        }
-      },
+      fileFilter: handelfileFilter,
     }),
   )
   async create(
     @Body()
     body: CreateAdvertisingDto,
     @UploadedFile() file: Express.Multer.File,
+    @Request() req,
   ): Promise<Advertising> {
     try {
       const filePath = file ? file.path : null;
       const fileType = file ? file.mimetype : null;
-      return this.advertisingService.create({ ...body, filePath, fileType });
+      return this.advertisingService.create({
+        ...body,
+        filePath,
+        fileType,
+        createdBy: req.user.id,
+      });
     } catch (error) {
       if (file?.path) {
         deleteFile(file.path);
@@ -65,45 +73,45 @@ export class AdvertisingController {
       throw error;
     }
   }
-
+  @ApiOperation({ summary: 'Retrieve all advertisements (Admin only)' })
+  @Roles(UerRole.Admin)
+  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @Get()
   findAll() {
     return this.advertisingService.findAll();
   }
-
+  @ApiOperation({ summary: 'Retrieve a single advertisement by ID' })
+  @ApiParam({ name: 'id', description: 'ID of the advertisement', example: '12345' })
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.advertisingService.findOne(id);
   }
-
+  @Roles(UerRole.Admin, UerRole.Advertiser)
+  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
         destination: './uploads',
-        filename: (req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          callback(null, `${uniqueSuffix}-${file.originalname}`);
-        },
+        filename: editFileName,
       }),
-      fileFilter: (req, file, callback) => {
-        const allowedTypes = [
-          'image/jpeg',
-          'image/png',
-          'video/mp4',
-          'video/mkv',
-        ];
-        if (allowedTypes.includes(file.mimetype)) {
-          callback(null, true);
-        } else {
-          callback(new Error('Invalid file type'), false);
-        }
-      },
+      fileFilter: handelfileFilter,
     }),
   )
+
+  @ApiOperation({ summary: 'Update an advertisement' })
+  @ApiConsumes('multipart/form-data')
+  @ApiParam({ name: 'id', description: 'ID of the advertisement to update', example: '12345' })
+  @ApiBody({
+    description: 'Update Advertising Request',
+    type: UpdateAdvertisingDto,
+  })
   async update(
     @Param('id') id: string,
+    @Request() req,
     @Body()
     body: {
       title?: string;
@@ -117,12 +125,30 @@ export class AdvertisingController {
   ): Promise<Advertising> {
     const filePath = file ? file.path : undefined;
     const fileType = file ? file.mimetype : undefined;
+
+    const userId = req.user.id; 
+    const userRole = req.user.role;
+    const isAllowed = await this.advertisingService.canUpdateAd(
+      id,
+      userId,
+      userRole,
+    );
+    if (!isAllowed) {
+      throw new ForbiddenException(
+        'You do not have permission to update this ad.',
+      );
+    }
     return this.advertisingService.update(id, {
       ...body,
       ...(filePath && { filePath, fileType }),
     });
   }
 
+  @ApiOperation({ summary: 'Delete an advertisement' })
+  @ApiParam({ name: 'id', description: 'ID of the advertisement to delete', example: '12345' })
+  @Roles(UerRole.Admin, UerRole.Advertiser)
+  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.advertisingService.remove(id);

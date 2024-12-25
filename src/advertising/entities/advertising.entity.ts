@@ -28,6 +28,9 @@ export class Advertising {
 
   @Prop({ type: TargetAudience, required: false })
   targetAudience?: TargetAudience;
+
+  @Prop()
+  createdBy: string;
 }
 
 export const AdvertisingSchema = SchemaFactory.createForClass(Advertising);

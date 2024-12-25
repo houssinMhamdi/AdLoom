@@ -27,10 +27,6 @@ import { RolesGuard } from './guard/roles.guard';
       useClass: BcryptService,
     },
     JwtStrategy,
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard, 
-    },
   ],
   controllers: [AuthController],
 })

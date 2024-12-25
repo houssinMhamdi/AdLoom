@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAdvertisingDto } from './dto/create-advertising.dto';
 import { UpdateAdvertisingDto } from './dto/update-advertising.dto';
 import { Model } from 'mongoose';
 import { Advertising } from './entities/advertising.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import * as fs from 'fs';
+import { UerRole } from 'src/user/Enums/Roles';
 
 @Injectable()
 export class AdvertisingService {
@@ -13,7 +14,7 @@ export class AdvertisingService {
     private readonly adsModel: Model<Advertising>,
   ) {}
 
-  async create(item: CreateAdvertisingDto): Promise<Advertising> {
+  async create(item: CreateAdvertisingDto & { createdBy: string }): Promise<Advertising> {
     if (!item.title || !item.description) {
       throw new Error('Required fields are missing');
     }
@@ -71,4 +72,25 @@ export class AdvertisingService {
       console.log('eee', error);
     }
   }
+
+  async canUpdateAd(adId: string, userId: string, userRole: string): Promise<boolean> {
+    const ad = await this.adsModel.findOne({ _id: adId });
+  
+    if (!ad) {
+      throw new NotFoundException('Ad not found.');
+    }
+  
+    // Admins can update any ad
+    if (userRole === UerRole.Admin) {
+      return true;
+    }
+  
+    // Advertisers can update only their own ads
+    if (userRole === UerRole.Advertiser && ad.createdBy === userId) {
+      return true;
+    }
+  
+    return false;
+  }
+  
 }

@@ -11,10 +11,7 @@ import { RolesGuard } from 'src/auth/guard/roles.guard';
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   controllers: [UserController],
-  providers: [UserService,{
-    provide: APP_GUARD,
-    useClass: RolesGuard, 
-  },],
+  providers: [UserService],
   exports: [UserService],
 
 })

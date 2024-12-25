@@ -17,15 +17,20 @@ import { UserService } from './user.service';
 import { CompleteAdvertiserProfileDto } from './dto/complete-advertiser-profile.dto';
 import { CompleteVenueOwnerProfileDto } from './dto/complete-VenueOwner-profile.dto';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
-import { Role } from 'src/auth/guard/roles.decorator';
+import { Roles } from 'src/auth/guard/roles.decorator';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { ApiBearerAuth, ApiBody, ApiOperation } from '@nestjs/swagger';
+import { UerRole } from './Enums/Roles';
 
 @Controller('api')
 export class UserController {
   constructor(private readonly userService: UserService) {}
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Complete user profile', description: 'Complete either advertiser or venue owner profile based on user role' })
+  @ApiOperation({
+    summary: 'Complete user profile',
+    description:
+      'Complete either advertiser or venue owner profile based on user role',
+  })
   @ApiBody({
     schema: {
       oneOf: [
@@ -37,9 +42,15 @@ export class UserController {
             businessType: { type: 'string', example: 'Technology' },
             registrationNumber: { type: 'string', example: 'REG123456' },
             contactPerson: { type: 'string', example: 'John Doe' },
-            contactEmail: { type: 'string', example: 'john@techcorp.com' }
+            contactEmail: { type: 'string', example: 'john@techcorp.com' },
           },
-          required: ['companyName', 'businessType', 'registrationNumber', 'contactPerson', 'contactEmail']
+          required: [
+            'companyName',
+            'businessType',
+            'registrationNumber',
+            'contactPerson',
+            'contactEmail',
+          ],
         },
         {
           title: 'VenueOwnerProfile',
@@ -48,13 +59,22 @@ export class UserController {
             venueName: { type: 'string', example: 'Sports Bar & Grill' },
             venueType: { type: 'string', example: 'Sports Bar' },
             licenseNumber: { type: 'string', example: 'LIC123456789' },
-            location: { type: 'string', example: '123 Tech Street, Silicon Valley, CA 94025' },
-            numberOfTVs: { type: 'number', example: 5 }
+            location: {
+              type: 'string',
+              example: '123 Tech Street, Silicon Valley, CA 94025',
+            },
+            numberOfTVs: { type: 'number', example: 5 },
           },
-          required: ['venueName', 'venueType', 'licenseNumber', 'location', 'numberOfTVs']
-        }
-      ]
-    }
+          required: [
+            'venueName',
+            'venueType',
+            'licenseNumber',
+            'location',
+            'numberOfTVs',
+          ],
+        },
+      ],
+    },
   })
   @UseGuards(JwtAuthGuard)
   @Put('/user/complete')
@@ -83,10 +103,9 @@ export class UserController {
     }
   }
 
-
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Role('admin')
+  @Roles(UerRole.Admin)
+  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('/admin/pending-users')
   async getPendingUsers(
     @Query('limit') limit: number,
@@ -95,19 +114,17 @@ export class UserController {
     return this.userService.getpendingUsers(limit, skip);
   }
 
-
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Role('admin')
+  @Roles(UerRole.Admin)
+  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @Patch('/admin/approve/:userId')
   async approveUser(@Param('userId') userId: string) {
     return this.userService.approveUser(userId);
   }
 
-
-  
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Role('admin')
+  @Roles(UerRole.Admin)
+  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @Patch('/admin/reject/:userId')
   async rejectUser(@Param('userId') userId: string) {
     return this.userService.rejectUser(userId);
