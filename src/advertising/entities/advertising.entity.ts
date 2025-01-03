@@ -1,5 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
+import { Schedule } from 'src/scheduel/entities/scheduel.entity';
+
 
 export type AdvertisingDocument = HydratedDocument<Advertising>;
 
@@ -31,6 +33,11 @@ export class Advertising {
 
   @Prop()
   createdBy: string;
+
+  
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Schedule' }] }) // Array of Schedule references
+  schedules: Schedule[];
+  
 }
 
 export const AdvertisingSchema = SchemaFactory.createForClass(Advertising);

@@ -1,8 +1,13 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { UerRole, Status, ProfileStatus } from '../Enums/Roles';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
+  @ApiProperty()
+  @IsOptional() // Mark as optional
+  @IsString()
+  appId?: string; 
+
   @ApiProperty()
   @IsEmail({}, { message: 'A valid email address is required.' })
   @IsNotEmpty({ message: 'Email is required.' })

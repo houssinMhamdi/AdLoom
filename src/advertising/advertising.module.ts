@@ -5,6 +5,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Advertising, AdvertisingSchema } from './entities/advertising.entity';
 import { MulterModule } from '@nestjs/platform-express';
 import { join } from 'path';
+import { Schedule, ScheduleSchema } from 'src/scheduel/entities/scheduel.entity';
+
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { join } from 'path';
         name: Advertising.name,
         schema: AdvertisingSchema,
       },
+      { name: Schedule.name, schema: ScheduleSchema },
+     
     ]),
   ],
   controllers: [AdvertisingController],

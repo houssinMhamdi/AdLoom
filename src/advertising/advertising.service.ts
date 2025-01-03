@@ -6,15 +6,19 @@ import { Advertising } from './entities/advertising.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import * as fs from 'fs';
 import { UerRole } from 'src/user/Enums/Roles';
+import { Schedule } from 'src/scheduel/entities/scheduel.entity';
 
 @Injectable()
 export class AdvertisingService {
   constructor(
     @InjectModel(Advertising.name)
     private readonly adsModel: Model<Advertising>,
+    @InjectModel(Schedule.name) private readonly scheduleModel: Model<Schedule>,
   ) {}
 
-  async create(item: CreateAdvertisingDto & { createdBy: string }): Promise<Advertising> {
+  async create(
+    item: CreateAdvertisingDto & { createdBy: string },
+  ): Promise<Advertising> {
     if (!item.title || !item.description) {
       throw new Error('Required fields are missing');
     }
@@ -23,7 +27,7 @@ export class AdvertisingService {
   }
 
   async findAll(): Promise<Advertising[]> {
-    return this.adsModel.find().exec();
+    return this.adsModel.find().populate('schedules').exec();
   }
 
   findOne(id: string) {
@@ -73,24 +77,69 @@ export class AdvertisingService {
     }
   }
 
-  async canUpdateAd(adId: string, userId: string, userRole: string): Promise<boolean> {
+  async canUpdateAd(
+    adId: string,
+    userId: string,
+    userRole: string,
+  ): Promise<boolean> {
     const ad = await this.adsModel.findOne({ _id: adId });
-  
+
     if (!ad) {
       throw new NotFoundException('Ad not found.');
     }
-  
+
     // Admins can update any ad
     if (userRole === UerRole.Admin) {
       return true;
     }
-  
+
     // Advertisers can update only their own ads
     if (userRole === UerRole.Advertiser && ad.createdBy === userId) {
       return true;
     }
-  
     return false;
   }
-  
+
+  async addSchedule(
+    createScheduleDto: Partial<Schedule>,
+  ): Promise<Advertising> {
+    const schedule = new this.scheduleModel(createScheduleDto);
+    await schedule.save();
+
+    return this.adsModel
+      .findByIdAndUpdate(
+        createScheduleDto.adId,
+        { $push: { schedules: schedule._id } }, // Add the schedule to the schedules array
+        { new: true },
+      )
+      .populate('schedules')
+      .exec();
+  }
+
+  async updateSchedule(
+    scheduleId: string,
+    updateScheduleDto: Partial<Schedule>,
+  ): Promise<Schedule> {
+    return this.scheduleModel
+      .findByIdAndUpdate(scheduleId, updateScheduleDto, { new: true })
+      .exec();
+  }
+
+  async deleteSchedule(
+    advertisingId: string,
+    scheduleId: string,
+  ): Promise<Advertising> {
+    // Delete the schedule document
+    await this.scheduleModel.findByIdAndDelete(scheduleId).exec();
+
+    // Remove the schedule reference from the advertising document
+    return this.adsModel
+      .findByIdAndUpdate(
+        advertisingId,
+        { $pull: { schedules: scheduleId } }, // Remove the schedule ID from the schedules array
+        { new: true },
+      )
+      .populate('schedules')
+      .exec();
+  }
 }

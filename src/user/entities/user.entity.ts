@@ -1,11 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { ProfileStatus, UerRole, Status } from '../Enums/Roles';
+import { v4 as uuidv4 } from 'uuid'; 
 
 export type UserDocument = HydratedDocument<User>;
 
 @Schema({ timestamps: true })
 export class User {
+  @Prop({ default: () => uuidv4(), unique: true })
+  appId: string;
+
   @Prop({ required: true, unique: true })
   email: string;
 
@@ -29,6 +33,9 @@ export class User {
 
   @Prop({ default: 'inactive', enum: ProfileStatus })
   profileStatus: string;
+
+  @Prop({ default: 1})
+  deviceNumber:number
 
   // Fields for Advertiser
   @Prop()
@@ -55,3 +62,10 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.pre("save",function (next){
+  if (!this.appId) {
+    this.appId = uuidv4(); 
+  }
+  next()
+});

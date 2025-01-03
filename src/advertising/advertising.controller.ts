@@ -25,6 +25,7 @@ import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { UerRole } from 'src/user/Enums/Roles';
 import { Roles } from 'src/auth/guard/roles.decorator';
 import { ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { Schedule } from 'src/scheduel/entities/scheduel.entity';
 
 @ApiTags('Advertising')
 @Controller('api/advertising')
@@ -152,5 +153,27 @@ export class AdvertisingController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.advertisingService.remove(id);
+  }
+
+  @Post('schedules')
+  async addSchedule(@Body() createScheduleDto: Partial<Schedule>): Promise<Advertising> {
+    return this.advertisingService.addSchedule( createScheduleDto);
+  }
+
+  @Put(':advertisingId/schedules/:scheduleId')
+  async updateSchedule(
+    @Param('advertisingId') advertisingId: string,
+    @Param('scheduleId') scheduleId: string,
+    @Body() updateScheduleDto: Partial<Schedule>,
+  ): Promise<Schedule> {
+    return this.advertisingService.updateSchedule(scheduleId, updateScheduleDto);
+  }
+
+  @Delete(':advertisingId/schedules/:scheduleId')
+  async deleteSchedule(
+    @Param('advertisingId') advertisingId: string,
+    @Param('scheduleId') scheduleId: string,
+  ): Promise<Advertising> {
+    return this.advertisingService.deleteSchedule(advertisingId, scheduleId);
   }
 }
