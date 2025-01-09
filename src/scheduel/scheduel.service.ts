@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Schedule } from '../scheduel/entities/scheduel.entity';
+import { CreateScheduelDto } from './dto/create-scheduel.dto';
+import { UpdateScheduelDto } from './dto/update-scheduel.dto';
 
 @Injectable()
 export class SchedulesService {
@@ -9,7 +11,7 @@ export class SchedulesService {
     @InjectModel(Schedule.name) private readonly scheduleModel: Model<Schedule>,
   ) {}
 
-  async create(createScheduleDto: Partial<Schedule>): Promise<Schedule> {
+  async create(createScheduleDto: CreateScheduelDto): Promise<Schedule> {
     const createdSchedule = new this.scheduleModel(createScheduleDto);
     return createdSchedule.save();
   }
@@ -24,7 +26,7 @@ export class SchedulesService {
 
   async update(
     adId: string,
-    updateScheduleDto: Partial<Schedule>,
+    updateScheduleDto: UpdateScheduelDto,
   ): Promise<Schedule> {
     return this.scheduleModel
       .findOneAndUpdate({ adId }, updateScheduleDto, { new: true })
