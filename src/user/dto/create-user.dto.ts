@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
   @ApiProperty()
-  @IsOptional() // Mark as optional
+  @IsOptional()
   @IsString()
   appId?: string; 
 
@@ -51,7 +51,7 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'Role is required.' })
   role: UerRole;
 
-  @ApiProperty()
+  @ApiProperty({default:1})
   @IsOptional() 
   @IsNumber()
   deviceNumber?:number

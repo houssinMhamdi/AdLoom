@@ -6,6 +6,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { AdvertisingModule } from './advertising/advertising.module';
 import { ScheduelModule } from './scheduel/scheduel.module';
+import { AdAdminAssinmentModule } from './ad-admin-assinment/ad-admin-assinment.module';
 
 
 @Module({
@@ -17,6 +18,7 @@ import { ScheduelModule } from './scheduel/scheduel.module';
     AuthModule,
     AdvertisingModule,
     ScheduelModule,
+    AdAdminAssinmentModule,
   ],
   controllers: [AppController],
   providers: [

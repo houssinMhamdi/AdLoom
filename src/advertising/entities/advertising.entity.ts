@@ -35,7 +35,7 @@ export class Advertising {
   createdBy: string;
 
   
-  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Schedule' }] }) // Array of Schedule references
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Schedule' }] }) 
   schedules: Schedule[];
   
 }

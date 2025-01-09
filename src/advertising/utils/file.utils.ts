@@ -1,4 +1,3 @@
-import { extname } from 'path';
 import * as fs from 'fs';
 import { Request } from 'express';
 
