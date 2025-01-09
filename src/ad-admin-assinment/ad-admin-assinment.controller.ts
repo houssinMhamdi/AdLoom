@@ -26,6 +26,9 @@ export class AdAdminAssinmentController {
   ) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create a new ad assignment' })
+  @ApiResponse({ status: 201, description: 'Ad assignment created successfully.' })
+  @ApiResponse({ status: 400, description: 'Bad request.' })
   create(@Body() createAdAdminAssinmentDto: CreateAdAdminAssinmentDto) {
     return this.adAdminAssinmentService.create(createAdAdminAssinmentDto);
   }
