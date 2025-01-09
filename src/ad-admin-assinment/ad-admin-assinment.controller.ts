@@ -19,7 +19,7 @@ import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 @Roles(UerRole.Admin)
 @UseGuards(RolesGuard)
 @UseGuards(JwtAuthGuard)
-@Controller('ad-admin-assinment')
+@Controller('api/ads/manage')
 export class AdAdminAssinmentController {
   constructor(
     private readonly adAdminAssinmentService: AdAdminAssinmentService,
